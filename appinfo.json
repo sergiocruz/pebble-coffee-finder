@@ -1,0 +1,18 @@
+{
+  "uuid": "fe83dc6e-04a9-48c3-ab73-2f04cfc6a5f1",
+  "shortName": "Coffee Finder",
+  "longName": "Coffee Finder",
+  "companyName": "Sergio Cruz",
+  "versionCode": 1,
+  "versionLabel": "1.0.0",
+  "watchapp": {
+    "watchface": true
+  },
+  "appKeys": {
+    "location": 0
+  },
+  "capabilities": ["location"],
+  "resources": {
+    "media": []
+  }
+}
