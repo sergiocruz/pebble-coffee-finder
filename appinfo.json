@@ -9,7 +9,8 @@
     "watchface": true
   },
   "appKeys": {
-    "location": 0
+    "location": 0,
+    "business": 1
   },
   "capabilities": ["location"],
   "resources": {
