@@ -1,4 +1,5 @@
 'use strict';
+/* global Pebble */
 
 /**
  * Fetches location data
@@ -15,10 +16,11 @@ function fetch_location_data(pos) {
   // Endpoint URL
   var url = 'http://coffee.bringitfast.com/api/v1/search?' +
           '&client_secret=HjuCrMRN' +
-          '&lat=' + latitude +
-          '&lon=' + longitude +
+          '&limit=1' +
           '&radius=3' +
           '&term=coffee' +
+          '&lat=' + latitude +
+          '&lon=' + longitude +
           '&v=' + version;
 
   /**
@@ -44,8 +46,13 @@ function fetch_location_data(pos) {
       var response = JSON.parse(xhr.responseText);
       var venue = response.data[0];
 
-      business = venue.name;
-      location = venue.address + ', ' + venue.city;
+      // var name = 'Achilles Art and Cafe Coffee';
+      if (venue.name.length >= 28) {
+        venue.name = trimWords(venue.name);
+      }
+
+      location = '';
+      business = venue.name + "\n" + venue.address + ', ' + venue.city;
 
     } else {
       business = 'No coffee shops :(';
@@ -59,6 +66,10 @@ function fetch_location_data(pos) {
   };
 
   xhr.send(null);
+}
+
+function trimWords(word) {
+  return word.replace(/^(.{20}[^\s]*).*/, "$1") + '...'
 }
 
 /**

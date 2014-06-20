@@ -8,7 +8,7 @@ static TextLayer *time_layer;
 static TextLayer *date_layer;
  
 static AppSync sync;
-static uint8_t sync_buffer[64];
+static uint8_t sync_buffer[256];
  
 enum {
   OUR_LOCATION = 0x0,
@@ -73,7 +73,7 @@ void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
   }
 
   // TODO: Only update the date when it's changed.
-  strftime(date_text, sizeof(date_text), "%B %e", tick_time);
+  strftime(date_text, sizeof(date_text), "%a %e", tick_time);
   text_layer_set_text(date_layer, date_text);
 
 
@@ -115,8 +115,8 @@ static void init_clock(Window *window) {
  
   time_t now = time(NULL);
   struct tm *current_time = localtime(&now);
-  handle_second_tick(current_time, SECOND_UNIT);
-  tick_timer_service_subscribe(SECOND_UNIT, &handle_minute_tick);
+  handle_minute_tick(current_time, MINUTE_UNIT);
+  tick_timer_service_subscribe(MINUTE_UNIT, &handle_minute_tick);
 
   size_t strftime (char* ptr, size_t maxsize, const char* format, const struct tm* current_time );
  
@@ -140,7 +140,7 @@ static void init_location_search(Window *window) {
   text_layer_set_text_color(business_layer, GColorWhite);
   text_layer_set_text_alignment(business_layer, GTextAlignmentCenter);
   text_layer_set_background_color(business_layer, GColorClear);
-  text_layer_set_overflow_mode(business_layer, GTextOverflowModeFill);
+  text_layer_set_overflow_mode(business_layer, GTextOverflowModeWordWrap);
   text_layer_set_font(business_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   layer_add_child(window_layer, text_layer_get_layer(business_layer));
 
@@ -149,7 +149,7 @@ static void init_location_search(Window *window) {
   text_layer_set_text_color(address_layer, GColorWhite);
   text_layer_set_text_alignment(address_layer, GTextAlignmentCenter);
   text_layer_set_background_color(address_layer, GColorClear);
-  text_layer_set_overflow_mode(address_layer, GTextOverflowModeFill);
+  text_layer_set_overflow_mode(address_layer, GTextOverflowModeWordWrap);
   text_layer_set_font(address_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   layer_add_child(window_layer, text_layer_get_layer(address_layer));
 
@@ -183,7 +183,8 @@ static void init(void) {
     .unload = window_unload,
   });
  
-  app_message_open(64, 64);
+  app_message_open(256, 256);
+  // app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum())
  
   const bool animated = true;
   window_stack_push(window, animated);
