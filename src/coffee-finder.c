@@ -6,6 +6,8 @@ static TextLayer *business_layer;
 static TextLayer *address_layer;
 static TextLayer *time_layer;
 static TextLayer *date_layer;
+
+// static InverterLayer *inverter_layer;
  
 static AppSync sync;
 static uint8_t sync_buffer[256];
@@ -97,6 +99,9 @@ void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 static void init_clock(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
+
+  // inverter_layer = inverter_layer_create(GRect(0, 90, bounds.size.w, bounds.size.h/2));
+  // layer_add_child(window_layer, inverter_layer_get_layer(inverter_layer));
  
   time_layer = text_layer_create(GRect(0, 90, bounds.size.w, bounds.size.h-100));
   text_layer_set_text_alignment(time_layer, GTextAlignmentCenter);
@@ -189,6 +194,7 @@ static void init(void) {
   const bool animated = true;
   window_stack_push(window, animated);
   window_set_background_color(window, GColorBlack);
+  // window_set_background_color(window, GColorWhite);
 }
  
 static void deinit(void) {
