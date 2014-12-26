@@ -2,6 +2,18 @@
 /* global Pebble */
 
 /**
+ * XHR Request
+ * @type {Object}
+ */
+var xhr;
+
+/**
+ * Determines if a location has been previously found
+ * @type {Boolean}
+ */
+var hasPreviousLocation = false;
+
+/**
  * Fetches location data
  * @param  {Object} pos GPS and other info from Pebble
  * @return {Void}
@@ -9,8 +21,7 @@
 function fetch_location_data(pos) {
 
   // Parameters
-  var version = Date.now(),
-      latitude = pos.coords.latitude,
+  var latitude  = pos.coords.latitude,
       longitude = pos.coords.longitude;
 
   // Endpoint URL
@@ -20,56 +31,56 @@ function fetch_location_data(pos) {
           '&radius=3' +
           '&term=coffee' +
           '&lat=' + latitude +
-          '&lon=' + longitude +
-          '&v=' + version;
+          '&lon=' + longitude;
 
   /**
    * Executes HTTP Request
    * @type {XMLHttpRequest}
    */
-  var xhr = new XMLHttpRequest();
+  xhr = new XMLHttpRequest();
   xhr.timeout = 6000;
   xhr.open('POST', url, true);
-
-  /**
-   * XHR onload method, gets called once we receive a response from server
-   * @param  {Object} e   The XHR event
-   * @return {Void}
-   */
-  xhr.onload = function(e) {
-
-    var location = '',
-        business = '';
-
-    if (xhr.readyState == 4 && xhr.status == 200) {
-
-      var response = JSON.parse(xhr.responseText);
-      var venue = response.data[0];
-
-      // var name = 'Achilles Art and Cafe Coffee';
-      if (venue.name.length >= 28) {
-        venue.name = trimWords(venue.name);
-      }
-
-      location = '';
-      business = venue.name + "\n" + venue.address + ', ' + venue.city;
-
-    } else {
-      business = 'No coffee shops :(';
-    }
-
-    // Sends message back to Pebble device
-    Pebble.sendAppMessage({
-      location: location,
-      business: business
-    });
-  };
-
+  xhr.onload = onSuccess;
   xhr.send(null);
 }
 
-function trimWords(word) {
-  return word.replace(/^(.{20}[^\s]*).*/, "$1") + '...'
+/**
+ * XHR onload method, gets called once we receive a response from server
+ * @param  {Object} e   The XHR event
+ * @return {Void}
+ */
+function onSuccess() {
+
+  var location = '',
+      business = '',
+      response,
+      venue;
+
+  if (xhr.readyState === 4 && xhr.status === 200) {
+
+    response = JSON.parse(xhr.responseText);
+    venue = response.data[0];
+
+    // Trims if name is too long
+    if (venue.name.length >= 28) {
+      venue.name = trimWords(venue.name);
+    }
+
+    location = '';
+    business = venue.name + '\n' + venue.address + ', ' + venue.city;
+
+  } else {
+    business = 'No coffee shops :(';
+  }
+
+  // Sets flag to true
+  hasPreviousLocation = true;
+
+  // Sends message back to Pebble device
+  Pebble.sendAppMessage({
+    location: location,
+    business: business
+  });
 }
 
 /**
@@ -77,15 +88,43 @@ function trimWords(word) {
  * @param  {Object} err Error Object
  * @return {Void}
  */
-function fetch_location_error(err) {
-  Pebble.sendAppMessage({location: 'Unable to retrieve location'});
+function fetch_location_error() {
+
+  if (!hasPreviousLocation) {
+    return;
+  }
+
+  // only sends message if no previous location was found
+  Pebble.sendAppMessage({
+    location: '',
+    business: 'Location unavailable'
+  });
+
+}
+
+/**
+ * Trims words
+ * @param  {String} word
+ * @return {String}
+ */
+function trimWords(word) {
+  return word.replace(/^(.{20}[^\s]*).*/, '$1') + '...';
 }
 
 
 /**
  * Gets run when pebble device is ready
+ * 5 minutes timeout and max age
  */
-var locationOptions = { timeout: 15000, maximumAge: 60000 };
-Pebble.addEventListener('ready', function(e) {
-  var locationWatcher = window.navigator.geolocation.watchPosition(fetch_location_data, fetch_location_error, locationOptions);
+var locationOptions = {
+  timeout: 300000,
+  maximumAge: 300000
+};
+
+Pebble.addEventListener('ready', function onPebbleReady() {
+  window.navigator.geolocation.watchPosition(
+    fetch_location_data,
+    fetch_location_error,
+    locationOptions
+  );
 });
